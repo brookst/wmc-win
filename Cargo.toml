@@ -1,0 +1,9 @@
+[package]
+name = "wmc-win"
+version = "0.1.0"
+authors = ["Tim Brooks <brooks@skoorb.net>"]
+edition = "2018"
+
+[dependencies]
+ws = "0.9"
+inputbot = "0.4"
