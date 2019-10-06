@@ -1,101 +1,67 @@
 extern crate inputbot;
-extern crate ws;
-
-use std::sync::mpsc::{channel, Receiver};
-use std::sync::{Arc, Mutex};
-use std::thread;
 
 use inputbot::handle_input_events;
 use inputbot::KeybdKey::OtherKey;
-use ws::{listen, util::Token, CloseCode, Error, ErrorKind, Handler, Handshake, Message, Sender};
 
-const POLL: Token = Token(1);
-const UPDATE_MS: u64 = 100;
+use std::io::{self, Read, Write};
+use std::vec::Vec;
+use std::string::String;
 
-struct RainmeterListener {
-    ws: Sender,
-    input: Arc<Mutex<Receiver<String>>>,
+fn write_message(msg: &str) -> () {
+    let encoded_len = (msg.len() as u32).to_ne_bytes();
+    let encoded_msg = msg.as_bytes();
+    let stdout = io::stdout();
+    let mut stdout_lock = stdout.lock();
+    stdout_lock.write_all(&encoded_len).unwrap();
+    stdout_lock.write_all(&encoded_msg).unwrap();
+    stdout_lock.flush().unwrap();
 }
 
-impl Handler for RainmeterListener {
-    fn on_message(&mut self, msg: Message) -> ws::Result<()> {
-        println!("Recieved message: {}", msg);
-        Ok(())
-    }
-    fn on_open(&mut self, _: Handshake) -> ws::Result<()> {
-        println!("Connection established");
-        // exhaust any kepresses prior to connection
-        while let Ok(_) = self.input.lock().unwrap().try_recv() {}
-        // schedule a timeout to send a gratuitous pong every 5 seconds
-        self.ws.timeout(UPDATE_MS, POLL)
-    }
-    fn on_timeout(&mut self, event: Token) -> ws::Result<()> {
-        if event == POLL {
-            if let Ok(command) = self.input.lock().unwrap().try_recv() {
-                println!("Sending command: {}", command);
-                self.ws.send(command)?;
-            }
-            // reschedule the timeout
-            self.ws.timeout(UPDATE_MS, POLL)
-        } else {
-            Err(Error::new(
-                ErrorKind::Internal,
-                "Invalid timeout token encountered!",
-            ))
-        }
-    }
-    fn on_close(&mut self, _: CloseCode, _: &str) {
-        println!("Connection lost");
-    }
+fn read_message() -> String {
+    let stdin = io::stdin();
+    let mut stdin_lock = stdin.lock();
+    
+    let mut encoded_len: [u8; 4] = [0, 0, 0, 0];
+    stdin_lock.read_exact(&mut encoded_len).unwrap();
+    let len = u32::from_ne_bytes(encoded_len);
+    
+    let mut encoded_msg: Vec<u8> = Vec::new();
+    encoded_msg.resize(len as usize, 0);
+    stdin_lock.read_exact(&mut encoded_msg).unwrap();
+
+    return String::from_utf8(encoded_msg).unwrap();
 }
 
-fn main() -> ws::Result<()> {
-    // Channel to pass keypresses to websocket
-    let (key_in, key_out) = channel();
-    let key_stream = Arc::new(Mutex::new(key_out));
+fn main() {
+    // Here we block until at least one message is read
+    // It's kinda fine because extension sends messages when opening a new tab
+    // The only case when we block for a long time is when already runnning extension tries
+    // to reconnect to this application, which is not very common
+    // It could be a good idea to send message when starting native application in any mode
+    let msg = read_message();
 
-    // Listen for keypresses of interest
-    thread::Builder::new()
-        .name("key_listener".to_owned())
-        .spawn(|| {
-            let output = Arc::new(Mutex::new(key_in));
-            OtherKey(0xB0).bind({
-                let output = output.clone();
-                move || {
-                    println!("Keypress: Next track");
-                    let _ = output.lock().unwrap().send("next".to_owned());
-                }
-            });
-            OtherKey(0xB1).bind({
-                let output = output.clone();
-                move || {
-                    println!("Keypress: Prev track");
-                    let _ = output.lock().unwrap().send("previous".to_owned());
-                }
-            });
-            OtherKey(0xB2).bind({
-                let output = output.clone();
-                move || {
-                    println!("Keypress: Stop");
-                    let _ = output.lock().unwrap().send("pause".to_owned());
-                }
-            });
-            OtherKey(0xB3).bind({
-                let output = output.clone();
-                move || {
-                    println!("Keypress: Play/Pause");
-                    let _ = output.lock().unwrap().send("playpause".to_owned());
-                }
-            });
-            handle_input_events();
-        })
-        .unwrap();
-
-    // Listen for websocket connections from web-media-controller
-    listen("127.0.0.1:8974", |out| RainmeterListener {
-        ws: out,
-        input: key_stream.clone(),
-    })?;
+    // I don't think using JSON library is really needed here
+    if msg.contains("ping") {
+        write_message(r#""pong""#);
+    }
+    
+    OtherKey(0xB0).bind(|| {
+        eprintln!("Keypress: Next track");      
+        write_message(r#"{"command": "next", "argument": null}"#);
+    });
+    OtherKey(0xB1).bind(|| {
+        eprintln!("Keypress: Prev track");
+        write_message(r#"{"command": "previous", "argument": null}"#);
+    });
+    OtherKey(0xB2).bind(|| {
+        eprintln!("Keypress: Stop");
+	write_message(r#"{"command": "stop", "argument": null}"#);
+    });
+    OtherKey(0xB3).bind(|| {
+        eprintln!("Keypress: Play/Pause");
+	write_message(r#"{"command": "playPause", "argument": null}"#);
+    });
+    handle_input_events();
 
     // We ought to be listening forever
     unreachable!();
