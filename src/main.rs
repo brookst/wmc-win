@@ -7,7 +7,7 @@ use std::io::{self, Read, Write};
 use std::vec::Vec;
 use std::string::String;
 
-fn write_message(msg: &str) -> () {
+fn write_message(msg: &str) {
     let encoded_len = (msg.len() as u32).to_ne_bytes();
     let encoded_msg = msg.as_bytes();
     let stdout = io::stdout();
@@ -29,7 +29,7 @@ fn read_message() -> String {
     encoded_msg.resize(len as usize, 0);
     stdin_lock.read_exact(&mut encoded_msg).unwrap();
 
-    return String::from_utf8(encoded_msg).unwrap();
+    String::from_utf8(encoded_msg).unwrap()
 }
 
 fn main() {
