@@ -1,5 +1,8 @@
 [package]
 name = "wmc-win"
+description = "Windows native application for controlling media playback within web browsers via the web-media-controller extension"
+homepage = "https://github.com/brookst/wmc-win#web-media-controller-windows-wmc-win"
+license-file = "LICENSE"
 version = "0.1.0"
 authors = ["Tim Brooks <brooks@skoorb.net>"]
 edition = "2018"

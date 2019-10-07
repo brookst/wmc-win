@@ -41,10 +41,15 @@ test_script:
 
 before_deploy:
   - cargo rustc --target %TARGET% --release --bin %CRATE_NAME% -- -C lto
+  - if [%TARGET%]==x86_64-pc-windows-msvc (
+      cargo install cargo-wix
+      cargo wix -V
+      cargo wix --nocapture
+    )
   - ps: ci\before_deploy.ps1
 
 deploy:
-  artifact: /.*\.zip/
+  artifact: /.*\.zip/, /.*\.msi/
   auth_token:
     secure: uSqRQwNpCfc4oRoL+A0tyh+aHTkgXjnw//AMVYcJkPQWO82aEp6ZWf6Ror7cVcej
   description: ''
