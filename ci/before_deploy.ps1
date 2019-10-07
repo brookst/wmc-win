@@ -12,10 +12,19 @@ $ZIP = "$SRC_DIR\$($Env:CRATE_NAME)-$($Env:APPVEYOR_REPO_TAG_NAME)-$($Env:TARGET
 
 Copy-Item "$SRC_DIR\target\$($Env:TARGET)\release\$($Env:CRATE_NAME).exe" '.\'
 Copy-Item "$SRC_DIR\manifests\*.json" '.\'
+Copy-Item "$SRC_DIR\README.md" '.\'
+Copy-Item "$SRC_DIR\LICENSE" '.\'
 
 7z a "$ZIP" *
 
 Push-AppveyorArtifact "$ZIP"
+
+# Also push out installer MSI on MSVC build
+If ($Env:TARGET -eq 'x86_64-pc-windows-msvc') {
+    $MSI = "$SRC_DIR\target\wix\$($Env:CRATE_NAME)-$($Env:APPVEYOR_REPO_TAG_NAME)-x86_64.msi"
+
+    Push-AppveyorArtifact "$MSI"
+}
 
 Remove-Item *.* -Force
 Set-Location ..
