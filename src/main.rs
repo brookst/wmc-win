@@ -4,8 +4,8 @@ use inputbot::handle_input_events;
 use inputbot::KeybdKey::OtherKey;
 
 use std::io::{self, Read, Write};
-use std::vec::Vec;
 use std::string::String;
+use std::vec::Vec;
 
 fn write_message(msg: &str) {
     let encoded_len = (msg.len() as u32).to_ne_bytes();
@@ -20,11 +20,11 @@ fn write_message(msg: &str) {
 fn read_message() -> String {
     let stdin = io::stdin();
     let mut stdin_lock = stdin.lock();
-    
+
     let mut encoded_len: [u8; 4] = [0, 0, 0, 0];
     stdin_lock.read_exact(&mut encoded_len).unwrap();
     let len = u32::from_ne_bytes(encoded_len);
-    
+
     let mut encoded_msg: Vec<u8> = Vec::new();
     encoded_msg.resize(len as usize, 0);
     stdin_lock.read_exact(&mut encoded_msg).unwrap();
@@ -44,9 +44,9 @@ fn main() {
     if msg.contains("ping") {
         write_message(r#""pong""#);
     }
-    
+
     OtherKey(0xB0).bind(|| {
-        eprintln!("Keypress: Next track");      
+        eprintln!("Keypress: Next track");
         write_message(r#"{"command": "next", "argument": null}"#);
     });
     OtherKey(0xB1).bind(|| {
@@ -55,11 +55,11 @@ fn main() {
     });
     OtherKey(0xB2).bind(|| {
         eprintln!("Keypress: Stop");
-	write_message(r#"{"command": "stop", "argument": null}"#);
+        write_message(r#"{"command": "stop", "argument": null}"#);
     });
     OtherKey(0xB3).bind(|| {
         eprintln!("Keypress: Play/Pause");
-	write_message(r#"{"command": "playPause", "argument": null}"#);
+        write_message(r#"{"command": "playPause", "argument": null}"#);
     });
     handle_input_events();
 
