@@ -41,9 +41,9 @@ test_script:
 
 before_deploy:
   - cargo rustc --target %TARGET% --release --bin %CRATE_NAME% -- -C lto
-  - if [%TARGET%]==x86_64-pc-windows-msvc (
-      cargo install cargo-wix
-      cargo wix -V
+  - if [%TARGET%]==[x86_64-pc-windows-msvc] (
+      cargo install cargo-wix &&
+      cargo wix -V &&
       cargo wix --nocapture
     )
   - ps: ci\before_deploy.ps1

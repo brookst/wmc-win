@@ -1,7 +1,7 @@
 {
     "name": "me.f1u77y.web_media_controller",
     "description": "Allows controlling VK player via MPRIS",
-    "path": "C:\\Program Files\\wmc-win\bin\\wmc-win.exe",
+    "path": "C:\\Program Files\\wmc-win\\bin\\wmc-win.exe",
     "type": "stdio",
     "allowed_extensions": [
         "web-media-controller@f1u77y.me"
