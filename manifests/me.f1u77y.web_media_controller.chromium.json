@@ -1,0 +1,9 @@
+{
+    "name": "me.f1u77y.web_media_controller",
+    "description": "Allows controlling VK player via MPRIS",
+    "path": "C:\\Program Files\\wmc-win\\bin\\wmc-win.exe",
+    "type": "stdio",
+    "allowed_origins": [
+        "chrome-extension://hhnmgpbnninfopkhcfigndicniegfocb/"
+    ]
+}

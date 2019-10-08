@@ -125,6 +125,22 @@
                             <RegistryValue Type='string' Value='[#FirefoxManifestJSON]'/>
                         </RegistryKey>
                     </Component>
+
+                    <Component Id='ChromiumManifest' Guid='15719CC2-CCF2-41E5-AF52-63B77E2EEAF3' Win64='$(var.Win64)'>
+                        <RegistryValue Root='HKCU' Key='Software\wmc-win'
+                            Name='ApplicationFolder'
+                            Value='[APPLICATIONFOLDER]'
+                            Type='string'
+                            KeyPath='yes' />
+                        <File Id='ChromiumManifestJSON'
+                              Source='manifests/me.f1u77y.web_media_controller.chromium.json'/>
+                    </Component>
+
+                    <Component Id='ChromiumRegistryEntry' Guid='DF8C05BC-E12D-4526-B1C9-BB7AED57F29F' Win64='$(var.Win64)'>
+                        <RegistryKey Root='HKCU' Key='SOFTWARE\Google\Chrome\NativeMessagingHosts\me.f1u77y.web_media_controller'>
+                            <RegistryValue Type='string' Value='[#ChromiumManifestJSON]'/>
+                        </RegistryKey>
+                    </Component>
                 </Directory>
             </Directory>
         </Directory>
@@ -156,6 +172,16 @@
                 Absent='allow'>
                 <ComponentRef Id='FirefoxManifest'/>
                 <ComponentRef Id='FirefoxRegistryEntry'/>
+            </Feature>
+
+            <Feature
+                Id='ChromiumManifest'
+                Title='Chromium native messaging manifest'
+                Description='Add the [ProductName] manifest for Chromium/Google Chrome. This allows the [ProductName] executable to be called be the web-media-controller extension.'
+                Level='1'
+                Absent='allow'>
+                <ComponentRef Id='ChromiumManifest'/>
+                <ComponentRef Id='ChromiumRegistryEntry'/>
             </Feature>
         </Feature>
 
