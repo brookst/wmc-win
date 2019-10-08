@@ -47,19 +47,30 @@
             InstallerVersion='450'
             Languages='1033'
             Compressed='yes'
-            InstallScope='perMachine'
+            InstallScope='perUser'
             SummaryCodepage='1252'
             Platform='$(var.Platform)'/>
 
         <MajorUpgrade
             Schedule='afterInstallInitialize'
+            AllowSameVersionUpgrades='yes'
             DowngradeErrorMessage='A newer version of [ProductName] is already installed. Setup will now exit.'/>
 
         <Media Id='1' Cabinet='media1.cab' EmbedCab='yes' DiskPrompt='CD-ROM #1'/>
         <Property Id='DiskPrompt' Value='wmc-win Installation'/>
+        <Property Id="POWERSHELLEXE">
+            <RegistrySearch Id="POWERSHELLEXE"
+                            Type="raw"
+                            Root="HKLM"
+                            Key="SOFTWARE\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell"
+                            Name="Path" />
+        </Property>
+        <Condition Message="This application requires Windows PowerShell.">
+            <![CDATA[Installed OR POWERSHELLEXE]]>
+        </Condition>
 
         <Directory Id='TARGETDIR' Name='SourceDir'>
-            <Directory Id='$(var.PlatformProgramFilesFolder)' Name='PFiles'>
+            <Directory Id='LocalAppDataFolder' Name='AppData'>
                 <Directory Id='APPLICATIONFOLDER' Name='wmc-win'>
                     <!--
                       Disabling the license sidecar file in the installer is a two step process:
@@ -68,43 +79,86 @@
                       2. Comment out or remove the `ComponentRef` tag with the "License" Id
                          attribute value further down in this file.
                     -->
-                    <Component Id='License' Guid='*' Win64='$(var.Win64)'>
+                    <Component Id='License' Guid='8AA4100F-B5E6-4C20-9348-B63AFA6EF079' Win64='$(var.Win64)'>
+                        <RegistryValue Root='HKCU' Key='Software\wmc-win'
+                            Name='ApplicationFolder'
+                            Value='[APPLICATIONFOLDER]'
+                            Type='string'
+                            KeyPath='yes' />
                         <File Id='LicenseFile'
                             Name='LICENSE'
                             DiskId='1'
-                            Source='LICENSE'
-                            KeyPath='yes'/>
+                            Source='LICENSE'/>
                     </Component>
 
                     <Directory Id='Bin' Name='bin'>
-                        <Component Id='wmcWinBinary' Guid='*' Win64='$(var.Win64)'>
+                        <Component Id='wmcWinBinary' Guid='55F49338-E115-4A25-A50D-D17EB1DBDB0E' Win64='$(var.Win64)'>
+                            <RemoveFolder Id='RemoveAPPLICATIONFOLDER' Directory='APPLICATIONFOLDER' On='uninstall' />
+                            <RemoveFolder Id='RemoveBin' Directory='Bin' On='uninstall' />
+                            <RegistryValue Root='HKCU' Key='Software\wmc-win'
+                                Name='ApplicationFolder'
+                                Value='[APPLICATIONFOLDER]'
+                                Type='string'
+                                KeyPath='yes' />
                             <File
                                 Id='wmcWinEXE'
                                 Name='wmc-win.exe'
                                 DiskId='1'
-                                Source='target\release\wmc-win.exe'
-                                KeyPath='yes'/>
+                                Source='target\release\wmc-win.exe'/>
                         </Component>
                     </Directory>
 
-                    <Component Id='Readme' Guid='*' Win64='$(var.Win64)'>
+                    <Component Id='Readme' Guid='1F84ABB1-4C6E-4C1B-BC99-25FDF665AF0B' Win64='$(var.Win64)'>
+                        <RegistryValue Root='HKCU' Key='Software\wmc-win'
+                            Name='ApplicationFolder'
+                            Value='[APPLICATIONFOLDER]'
+                            Type='string'
+                            KeyPath='yes' />
                         <File Id='ReadmeFile'
                             Name='README.md'
                             DiskId='1'
-                            Source='README.md'
-                            KeyPath='yes'/>
+                            Source='README.md'/>
                     </Component>
 
-                    <Component Id='FirefoxManifest' Guid='*' Win64='$(var.Win64)'>
+                    <Component Id='FirefoxManifest' Guid='974EAB3D-212A-4438-99DF-301DF4C012C4' Win64='$(var.Win64)'>
+                        <RegistryValue Root='HKCU' Key='Software\wmc-win'
+                            Name='ApplicationFolder'
+                            Value='[APPLICATIONFOLDER]'
+                            Type='string'
+                            KeyPath='yes' />
                         <File Id='FirefoxManifestJSON'
-                              Source='manifests/me.f1u77y.web_media_controller.firefox.json'
-                              KeyPath='yes'/>
+                              Source='manifests/me.f1u77y.web_media_controller.firefox.json'/>
                     </Component>
 
-                    <Component Id='FirefoxRegistryEntry' Guid='*' Win64='$(var.Win64)'>
+                    <Component Id='FirefoxRegistryEntry' Guid='A9A20121-814A-4987-8A5C-48B1B50C1973' Win64='$(var.Win64)'>
                         <RegistryKey Root='HKCU' Key='SOFTWARE\Mozilla\NativeMessagingHosts\me.f1u77y.web_media_controller'>
                             <RegistryValue Type='string' Value='[#FirefoxManifestJSON]'/>
                         </RegistryKey>
+                    </Component>
+
+                    <Component Id='ChromiumManifest' Guid='15719CC2-CCF2-41E5-AF52-63B77E2EEAF3' Win64='$(var.Win64)'>
+                        <RegistryValue Root='HKCU' Key='Software\wmc-win'
+                            Name='ApplicationFolder'
+                            Value='[APPLICATIONFOLDER]'
+                            Type='string'
+                            KeyPath='yes' />
+                        <File Id='ChromiumManifestJSON'
+                              Source='manifests/me.f1u77y.web_media_controller.chromium.json'/>
+                    </Component>
+
+                    <Component Id='ChromiumRegistryEntry' Guid='DF8C05BC-E12D-4526-B1C9-BB7AED57F29F' Win64='$(var.Win64)'>
+                        <RegistryKey Root='HKCU' Key='SOFTWARE\Google\Chrome\NativeMessagingHosts\me.f1u77y.web_media_controller'>
+                            <RegistryValue Type='string' Value='[#ChromiumManifestJSON]'/>
+                        </RegistryKey>
+                    </Component>
+
+                    <Component Id="SetPaths" Guid="FBE9C937-968D-4007-94E1-C1FABF2FDDD6">
+                        <RegistryValue Root='HKCU' Key='Software\wmc-win'
+                            Name='ApplicationFolder'
+                            Value='[APPLICATIONFOLDER]'
+                            Type='string'
+                            KeyPath='yes' />
+                        <File Id="SetPaths" Source="manifests/Set-Paths.ps1" />
                     </Component>
                 </Directory>
             </Directory>
@@ -129,6 +183,8 @@
 
             <ComponentRef Id='Readme'/>
 
+            <ComponentRef Id='SetPaths'/>
+
             <Feature
                 Id='FirefoxManifest'
                 Title='Firefox native messaging manifest'
@@ -138,9 +194,35 @@
                 <ComponentRef Id='FirefoxManifest'/>
                 <ComponentRef Id='FirefoxRegistryEntry'/>
             </Feature>
+
+            <Feature
+                Id='ChromiumManifest'
+                Title='Chromium native messaging manifest'
+                Description='Add the [ProductName] manifest for Chromium/Google Chrome. This allows the [ProductName] executable to be called be the web-media-controller extension.'
+                Level='1'
+                Absent='allow'>
+                <ComponentRef Id='ChromiumManifest'/>
+                <ComponentRef Id='ChromiumRegistryEntry'/>
+            </Feature>
         </Feature>
 
         <SetProperty Id='ARPINSTALLLOCATION' Value='[APPLICATIONFOLDER]' After='CostFinalize'/>
+
+        <SetProperty Id="SetPaths"
+                    Before="SetPaths"
+                    Sequence="execute"
+                    Value ="&quot;[POWERSHELLEXE]&quot; -Version 2.0 -NoProfile -NonInteractive -InputFormat None -ExecutionPolicy Bypass -Command &quot;&amp; '[#SetPaths]' ; exit $$($Error.Count)&quot;" />
+        <CustomAction Id="SetPaths"
+                      BinaryKey="WixCA"
+                      DllEntry="CAQuietExec"
+                      Execute="deferred"
+                      Return="check"
+                      Impersonate="yes" />
+        <InstallExecuteSequence>
+          <Custom Action="SetPaths" After="WriteRegistryValues">
+            <![CDATA[REMOVE <> "ALL"]]>
+          </Custom>
+        </InstallExecuteSequence>
 
         <!--
           Uncomment the following `Icon` and `Property` tags to change the product icon.

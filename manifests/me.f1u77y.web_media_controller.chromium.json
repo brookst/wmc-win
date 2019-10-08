@@ -3,7 +3,7 @@
     "description": "Allows controlling VK player via MPRIS",
     "path": "@EXECUTABLE_PATH@",
     "type": "stdio",
-    "allowed_extensions": [
-        "web-media-controller@f1u77y.me"
+    "allowed_origins": [
+        "chrome-extension://hhnmgpbnninfopkhcfigndicniegfocb/"
     ]
 }
